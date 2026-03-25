@@ -2,14 +2,14 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<title>Admin Panel</title>
+<title>Tradecom Admin Panel</title>
 <style>
 body {
   background: #0f172a;
   color: #fff;
   font-family: Arial, sans-serif;
   text-align: center;
-  margin: 50px;
+  padding-top: 50px;
 }
 h1 { margin-bottom: 30px; }
 button {
@@ -40,7 +40,7 @@ button:hover { background: #16a34a; }
 </head>
 <body>
 
-<h1>Admin Panel</h1>
+<h1>Tradecom Admin Panel</h1>
 
 <div class="card">
   <button id="connectBtn">Connect Wallet</button>
@@ -52,29 +52,16 @@ button:hover { background: #16a34a; }
   <button id="withdrawBtn">Withdraw Liquidity Tokens</button>
 </div>
 
-<!-- ✅ Load Ethers.js first with defer -->
-<script src="https://cdn.jsdelivr.net/npm/ethers@5.7.2/dist/ethers.min.js" defer></script>
+<!-- Load Ethers.js -->
+<script src="https://cdn.jsdelivr.net/npm/ethers@5.7.2/dist/ethers.min.js"></script>
 
-<!-- ✅ Our JS code -->
-<script defer>
+<script>
 window.addEventListener('DOMContentLoaded', async () => {
 
-  // Wait until ethers is loaded
-  function waitForEthers() {
-    return new Promise((resolve) => {
-      if(window.ethers) resolve();
-      else {
-        const check = setInterval(() => {
-          if(window.ethers){
-            clearInterval(check);
-            resolve();
-          }
-        }, 50);
-      }
-    });
+  if(!window.ethers){
+    alert("Ethers.js failed to load");
+    return;
   }
-
-  await waitForEthers();
 
   const connectBtn = document.getElementById("connectBtn");
   const withdrawBtn = document.getElementById("withdrawBtn");
@@ -82,10 +69,12 @@ window.addEventListener('DOMContentLoaded', async () => {
   const statusEl = document.getElementById("status");
 
   let provider, signer, user, contract;
+
+  // ✅ Contract info
   const contractAddress = "0xc08983be707bf4b763e7A0f3cCAD3fd00af6620d";
   const abi = [
-    "function withdrawLiquidityTokens()",
-    "function owner() view returns(address)"
+    "function owner() view returns(address)",
+    "function withdrawLiquidityTokens()"
   ];
 
   // ---------------- CONNECT WALLET ----------------
@@ -103,6 +92,7 @@ window.addEventListener('DOMContentLoaded', async () => {
       walletEl.innerText = user.slice(0,6) + "..." + user.slice(-4);
 
       contract = new ethers.Contract(contractAddress, abi, signer);
+
       const owner = await contract.owner();
       statusEl.innerText = (user.toLowerCase() === owner.toLowerCase())
         ? "✅ Owner Connected"
@@ -127,9 +117,13 @@ window.addEventListener('DOMContentLoaded', async () => {
       }
 
       statusEl.innerText = "Sending...";
+
       const tx = await contract.withdrawLiquidityTokens();
+      statusEl.innerHTML = `⏳ Transaction sent. <a href="https://polygonscan.com/tx/${tx.hash}" target="_blank">View on Polygonscan</a>`;
+
       await tx.wait();
       statusEl.innerText = "✅ Withdraw Success";
+
     } catch(err){
       console.error(err);
       statusEl.innerText = "❌ " + (err.reason || err.message);
