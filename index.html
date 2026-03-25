@@ -5,36 +5,37 @@
 <title>Tradecom Admin Panel</title>
 <style>
 body {
-  background: #0f172a;
-  color: #fff;
-  font-family: Arial, sans-serif;
-  text-align: center;
-  padding-top: 50px;
+    background: #0f172a;
+    color: #fff;
+    font-family: sans-serif;
+    text-align: center;
+    padding: 50px;
 }
-h1 { margin-bottom: 30px; }
+
+h1 {
+    margin-bottom: 30px;
+}
+
 button {
-  padding: 12px 20px;
-  margin: 10px;
-  background: #22c55e;
-  border: none;
-  border-radius: 8px;
-  cursor: pointer;
-  color: white;
-  font-weight: bold;
+    padding: 12px 20px;
+    margin: 10px;
+    background: #22c55e;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    color: white;
+    font-weight: bold;
+    font-size: 16px;
 }
-button:hover { background: #16a34a; }
-#wallet, #status {
-  font-weight: bold;
-  margin-top: 10px;
-  font-size: 16px;
+
+button:hover {
+    background: #16a34a;
 }
-.card {
-  background: #1e293b;
-  padding: 20px;
-  border-radius: 12px;
-  display: inline-block;
-  margin: 10px;
-  min-width: 250px;
+
+#wallet, #status, #balance {
+    margin-top: 10px;
+    font-weight: bold;
+    font-size: 16px;
 }
 </style>
 </head>
@@ -42,96 +43,17 @@ button:hover { background: #16a34a; }
 
 <h1>Tradecom Admin Panel</h1>
 
-<div class="card">
-  <button id="connectBtn">Connect Wallet</button>
-  <p id="wallet">Not Connected</p>
-  <p id="status"></p>
-</div>
+<button id="connectBtn">Connect Wallet</button>
+<p id="wallet">Not Connected</p>
+<p id="status"></p>
+<p id="balance"></p>
 
-<div class="card">
-  <button id="withdrawBtn">Withdraw Liquidity Tokens</button>
-</div>
+<button id="withdrawBtn">Withdraw Liquidity Tokens</button>
 
 <!-- Load Ethers.js -->
-<script src="https://cdn.jsdelivr.net/npm/ethers@5.7.2/dist/ethers.min.js"></script>
-
-<script>
-window.addEventListener('DOMContentLoaded', async () => {
-
-  if(!window.ethers){
-    alert("Ethers.js failed to load");
-    return;
-  }
-
-  const connectBtn = document.getElementById("connectBtn");
-  const withdrawBtn = document.getElementById("withdrawBtn");
-  const walletEl = document.getElementById("wallet");
-  const statusEl = document.getElementById("status");
-
-  let provider, signer, user, contract;
-
-  // ✅ Contract info
-  const contractAddress = "0xc08983be707bf4b763e7A0f3cCAD3fd00af6620d";
-  const abi = [
-    "function owner() view returns(address)",
-    "function withdrawLiquidityTokens()"
-  ];
-
-  // ---------------- CONNECT WALLET ----------------
-  connectBtn.addEventListener("click", async () => {
-    try {
-      if (!window.ethereum) {
-        alert("MetaMask not found!");
-        return;
-      }
-
-      provider = new ethers.providers.Web3Provider(window.ethereum);
-      await provider.send("eth_requestAccounts", []);
-      signer = provider.getSigner();
-      user = await signer.getAddress();
-      walletEl.innerText = user.slice(0,6) + "..." + user.slice(-4);
-
-      contract = new ethers.Contract(contractAddress, abi, signer);
-
-      const owner = await contract.owner();
-      statusEl.innerText = (user.toLowerCase() === owner.toLowerCase())
-        ? "✅ Owner Connected"
-        : "⚠️ Not Owner";
-
-      // Listen for account/network changes
-      window.ethereum.on("accountsChanged", () => location.reload());
-      window.ethereum.on("chainChanged", () => location.reload());
-
-    } catch(err){
-      console.error(err);
-      statusEl.innerText = "❌ " + (err.message || "Connection failed");
-    }
-  });
-
-  // ---------------- WITHDRAW ----------------
-  withdrawBtn.addEventListener("click", async () => {
-    try {
-      if(!contract){
-        alert("Connect wallet first");
-        return;
-      }
-
-      statusEl.innerText = "Sending...";
-
-      const tx = await contract.withdrawLiquidityTokens();
-      statusEl.innerHTML = `⏳ Transaction sent. <a href="https://polygonscan.com/tx/${tx.hash}" target="_blank">View on Polygonscan</a>`;
-
-      await tx.wait();
-      statusEl.innerText = "✅ Withdraw Success";
-
-    } catch(err){
-      console.error(err);
-      statusEl.innerText = "❌ " + (err.reason || err.message);
-    }
-  });
-
-});
-</script>
+<script src="https://unpkg.com/ethers@5.7.2/dist/ethers.min.js"></script>
+<!-- Load JS logic -->
+<script src="app.js"></script>
 
 </body>
 </html>
