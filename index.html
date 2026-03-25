@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<title>TRC Admin Panel</title>
+<title>Admin Panel</title>
 <style>
 body {
   background: #0f172a;
@@ -40,7 +40,7 @@ button:hover { background: #16a34a; }
 </head>
 <body>
 
-<h1>TRC Admin Panel</h1>
+<h1>Admin Panel</h1>
 
 <div class="card">
   <button id="connectBtn">Connect Wallet</button>
@@ -52,21 +52,11 @@ button:hover { background: #16a34a; }
   <button id="withdrawBtn">Withdraw Liquidity Tokens</button>
 </div>
 
-<!-- ✅ Load Ethers.js FIRST -->
+<!-- Load Ethers.js first -->
 <script src="https://cdn.jsdelivr.net/npm/ethers@5.7.2/dist/ethers.min.js"></script>
 
-<!-- ✅ All JS after Ethers.js -->
 <script>
-document.addEventListener('DOMContentLoaded', () => {
-  if (!window.ethers) {
-    alert("Ethers.js failed to load!");
-    return;
-  }
-
-  const connectBtn = document.getElementById("connectBtn");
-  const withdrawBtn = document.getElementById("withdrawBtn");
-  const walletEl = document.getElementById("wallet");
-  const statusEl = document.getElementById("status");
+window.addEventListener('DOMContentLoaded', () => {
 
   let provider, signer, user, contract;
   const contractAddress = "0xc08983be707bf4b763e7A0f3cCAD3fd00af6620d";
@@ -75,10 +65,15 @@ document.addEventListener('DOMContentLoaded', () => {
     "function owner() view returns(address)"
   ];
 
-  // ================= CONNECT WALLET =================
+  const walletEl = document.getElementById("wallet");
+  const statusEl = document.getElementById("status");
+  const connectBtn = document.getElementById("connectBtn");
+  const withdrawBtn = document.getElementById("withdrawBtn");
+
+  // ---------------- CONNECT WALLET ----------------
   connectBtn.addEventListener("click", async () => {
     try {
-      if(!window.ethereum){
+      if (!window.ethereum) {
         alert("MetaMask not found!");
         return;
       }
@@ -95,17 +90,17 @@ document.addEventListener('DOMContentLoaded', () => {
         ? "✅ Owner Connected"
         : "⚠️ Not Owner";
 
-      // Reload on account/network change
+      // Listen for account/network changes
       window.ethereum.on("accountsChanged", () => location.reload());
       window.ethereum.on("chainChanged", () => location.reload());
 
-    } catch(e) {
-      console.error(e);
-      statusEl.innerText = "❌ " + (e.message || "Connection failed");
+    } catch(err){
+      console.error(err);
+      statusEl.innerText = "❌ " + (err.message || "Connection failed");
     }
   });
 
-  // ================= WITHDRAW =================
+  // ---------------- WITHDRAW ----------------
   withdrawBtn.addEventListener("click", async () => {
     try {
       if(!contract){
@@ -116,13 +111,13 @@ document.addEventListener('DOMContentLoaded', () => {
       statusEl.innerText = "Sending...";
       const tx = await contract.withdrawLiquidityTokens();
       await tx.wait();
-
       statusEl.innerText = "✅ Withdraw Success";
-    } catch(e){
-      console.error(e);
-      statusEl.innerText = "❌ " + (e.reason || e.message);
+    } catch(err){
+      console.error(err);
+      statusEl.innerText = "❌ " + (err.reason || err.message);
     }
   });
+
 });
 </script>
 
