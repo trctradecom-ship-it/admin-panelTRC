@@ -3,7 +3,6 @@
 <head>
 <meta charset="UTF-8">
 <title>TRC Admin Panel</title>
-
 <style>
 body {
   background: #0f172a;
@@ -38,7 +37,6 @@ button:hover { background: #16a34a; }
   min-width: 250px;
 }
 </style>
-
 </head>
 <body>
 
@@ -54,11 +52,22 @@ button:hover { background: #16a34a; }
   <button id="withdrawBtn">Withdraw Liquidity Tokens</button>
 </div>
 
-<!-- ✅ Load Ethers.js -->
+<!-- ✅ Load Ethers.js FIRST -->
 <script src="https://cdn.jsdelivr.net/npm/ethers@5.7.2/dist/ethers.min.js"></script>
 
+<!-- ✅ All JS after Ethers.js -->
 <script>
-window.onload = () => {
+document.addEventListener('DOMContentLoaded', () => {
+  if (!window.ethers) {
+    alert("Ethers.js failed to load!");
+    return;
+  }
+
+  const connectBtn = document.getElementById("connectBtn");
+  const withdrawBtn = document.getElementById("withdrawBtn");
+  const walletEl = document.getElementById("wallet");
+  const statusEl = document.getElementById("status");
+
   let provider, signer, user, contract;
   const contractAddress = "0xc08983be707bf4b763e7A0f3cCAD3fd00af6620d";
   const abi = [
@@ -66,30 +75,21 @@ window.onload = () => {
     "function owner() view returns(address)"
   ];
 
-  const walletEl = document.getElementById("wallet");
-  const statusEl = document.getElementById("status");
-  const connectBtn = document.getElementById("connectBtn");
-  const withdrawBtn = document.getElementById("withdrawBtn");
-
   // ================= CONNECT WALLET =================
-  connectBtn.onclick = async () => {
+  connectBtn.addEventListener("click", async () => {
     try {
       if(!window.ethereum){
-        alert("MetaMask or compatible wallet not found!");
+        alert("MetaMask not found!");
         return;
       }
 
-      // Fast provider & signer
       provider = new ethers.providers.Web3Provider(window.ethereum);
       await provider.send("eth_requestAccounts", []);
       signer = provider.getSigner();
       user = await signer.getAddress();
-
       walletEl.innerText = user.slice(0,6) + "..." + user.slice(-4);
 
-      // Connect contract
       contract = new ethers.Contract(contractAddress, abi, signer);
-
       const owner = await contract.owner();
       statusEl.innerText = (user.toLowerCase() === owner.toLowerCase())
         ? "✅ Owner Connected"
@@ -99,14 +99,14 @@ window.onload = () => {
       window.ethereum.on("accountsChanged", () => location.reload());
       window.ethereum.on("chainChanged", () => location.reload());
 
-    } catch(e){
+    } catch(e) {
       console.error(e);
       statusEl.innerText = "❌ " + (e.message || "Connection failed");
     }
-  };
+  });
 
   // ================= WITHDRAW =================
-  withdrawBtn.onclick = async () => {
+  withdrawBtn.addEventListener("click", async () => {
     try {
       if(!contract){
         alert("Connect wallet first");
@@ -118,13 +118,12 @@ window.onload = () => {
       await tx.wait();
 
       statusEl.innerText = "✅ Withdraw Success";
-
     } catch(e){
       console.error(e);
       statusEl.innerText = "❌ " + (e.reason || e.message);
     }
-  };
-};
+  });
+});
 </script>
 
 </body>
