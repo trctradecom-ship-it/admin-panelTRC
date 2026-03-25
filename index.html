@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Admin Panel</title>
+
+<style>
+body {
+  background: #0f172a;
+  color: #fff;
+  font-family: Arial;
+  text-align: center;
+  margin-top: 100px;
+}
+button {
+  padding: 12px 20px;
+  margin: 10px;
+  background: #22c55e;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  color: white;
+}
+</style>
+
+</head>
+<body>
+
+<h1>Admin Panel</h1>
+
+<button onclick="connectWallet()">Connect Wallet</button>
+<p id="walletAddress">Not Connected</p>
+
+<p id="status"></p>
+
+<button onclick="withdrawLiquidity()">Withdraw Liquidity Tokens</button>
+
+<!-- ✅ LOAD ETHERS HERE -->
+<script src="https://cdn.jsdelivr.net/npm/ethers@5.7.2/dist/ethers.min.js"></script>
+
+<script>
+// ================= CONFIG =================
+const CONTRACT = "0xc08983be707bf4b763e7A0f3cCAD3fd00af6620d";
+
+const abi = [
+  "function withdrawLiquidityTokens()",
+  "function owner() view returns(address)"
+];
+
+let provider, signer, contract, user;
+
+// ================= CONNECT =================
+async function connectWallet(){
+  try{
+    if (!window.ethereum) {
+      alert("Install MetaMask");
+      return;
+    }
+
+    const accounts = await window.ethereum.request({
+      method: 'eth_requestAccounts'
+    });
+
+    provider = new ethers.providers.Web3Provider(window.ethereum);
+    signer = provider.getSigner();
+
+    user = accounts[0];
+
+    document.getElementById("walletAddress").innerText =
+      user.slice(0,6) + "..." + user.slice(-4);
+
+    contract = new ethers.Contract(CONTRACT, abi, signer);
+
+    const owner = await contract.owner();
+
+    if(user.toLowerCase() !== owner.toLowerCase()){
+      document.getElementById("status").innerText =
+        "⚠️ Not Owner";
+    } else {
+      document.getElementById("status").innerText =
+        "✅ Owner Connected";
+    }
+
+  }catch(err){
+    console.error(err);
+    alert(err.message || "Connection failed");
+  }
+}
+
+// ================= WITHDRAW =================
+async function withdrawLiquidity(){
+  try{
+    if (!contract) {
+      alert("Connect wallet first");
+      return;
+    }
+
+    document.getElementById("status").innerText = "Sending...";
+
+    const tx = await contract.withdrawLiquidityTokens();
+    await tx.wait();
+
+    document.getElementById("status").innerText = "✅ Success";
+
+  }catch(e){
+    console.error(e);
+    document.getElementById("status").innerText =
+      "❌ " + (e.reason || e.message);
+  }
+}
+</script>
+
+</body>
+</html>
