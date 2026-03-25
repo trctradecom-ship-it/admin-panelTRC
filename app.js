@@ -5,7 +5,7 @@ const abi = [
     "function withdrawLiquidityTokens()",
     "function balanceOf(address) view returns(uint256)"
 ];
-
+ 
 // Update liquidity balance display
 async function updateBalance() {
     if (!contract) return;
