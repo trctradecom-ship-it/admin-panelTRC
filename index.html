@@ -8,7 +8,7 @@
 body {
   background: #0f172a;
   color: #fff;
-  font-family: Arial;
+  font-family: Arial, sans-serif;
   text-align: center;
   margin-top: 100px;
 }
@@ -21,6 +21,8 @@ button {
   cursor: pointer;
   color: white;
 }
+#walletAddress { font-weight: bold; }
+#status { margin-top: 15px; font-weight: bold; }
 </style>
 
 </head>
@@ -30,12 +32,10 @@ button {
 
 <button onclick="connectWallet()">Connect Wallet</button>
 <p id="walletAddress">Not Connected</p>
-
 <p id="status"></p>
-
 <button onclick="withdrawLiquidity()">Withdraw Liquidity Tokens</button>
 
-<!-- ✅ LOAD ETHERS HERE -->
+<!-- ✅ LOAD ETHERS -->
 <script src="https://cdn.jsdelivr.net/npm/ethers@5.7.2/dist/ethers.min.js"></script>
 
 <script>
@@ -49,47 +49,50 @@ const abi = [
 
 let provider, signer, contract, user;
 
-// ================= CONNECT =================
-async function connectWallet(){
-  try{
+// ================= CONNECT WALLET =================
+async function connectWallet() {
+  try {
     if (!window.ethereum) {
-      alert("Install MetaMask");
+      alert("Install MetaMask or compatible wallet");
       return;
     }
 
-    const accounts = await window.ethereum.request({
-      method: 'eth_requestAccounts'
-    });
-
-    provider = new ethers.providers.Web3Provider(window.ethereum);
+    // ✅ FAST: Initialize provider immediately
+    provider = new ethers.providers.Web3Provider(window.ethereum, "any");
+    
+    // Prompt user to connect
+    const accounts = await provider.send("eth_requestAccounts", []);
     signer = provider.getSigner();
+    user = await signer.getAddress();
 
-    user = accounts[0];
-
+    // Display wallet address instantly
     document.getElementById("walletAddress").innerText =
       user.slice(0,6) + "..." + user.slice(-4);
 
+    // Connect contract
     contract = new ethers.Contract(CONTRACT, abi, signer);
 
+    // Check owner
     const owner = await contract.owner();
-
-    if(user.toLowerCase() !== owner.toLowerCase()){
-      document.getElementById("status").innerText =
-        "⚠️ Not Owner";
+    if(user.toLowerCase() === owner.toLowerCase()) {
+      document.getElementById("status").innerText = "✅ Owner Connected";
     } else {
-      document.getElementById("status").innerText =
-        "✅ Owner Connected";
+      document.getElementById("status").innerText = "⚠️ Not Owner";
     }
 
-  }catch(err){
+    // ✅ Optional: Listen for account/network changes
+    window.ethereum.on("accountsChanged", () => location.reload());
+    window.ethereum.on("chainChanged", () => location.reload());
+
+  } catch (err) {
     console.error(err);
-    alert(err.message || "Connection failed");
+    document.getElementById("status").innerText = "❌ " + (err.message || "Connection failed");
   }
 }
 
 // ================= WITHDRAW =================
-async function withdrawLiquidity(){
-  try{
+async function withdrawLiquidity() {
+  try {
     if (!contract) {
       alert("Connect wallet first");
       return;
@@ -102,7 +105,7 @@ async function withdrawLiquidity(){
 
     document.getElementById("status").innerText = "✅ Success";
 
-  }catch(e){
+  } catch (e) {
     console.error(e);
     document.getElementById("status").innerText =
       "❌ " + (e.reason || e.message);
