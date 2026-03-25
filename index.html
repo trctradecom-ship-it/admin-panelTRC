@@ -52,11 +52,34 @@ button:hover { background: #16a34a; }
   <button id="withdrawBtn">Withdraw Liquidity Tokens</button>
 </div>
 
-<!-- Load Ethers.js first -->
-<script src="https://cdn.jsdelivr.net/npm/ethers@5.7.2/dist/ethers.min.js"></script>
+<!-- ✅ Load Ethers.js first with defer -->
+<script src="https://cdn.jsdelivr.net/npm/ethers@5.7.2/dist/ethers.min.js" defer></script>
 
-<script>
-window.addEventListener('DOMContentLoaded', () => {
+<!-- ✅ Our JS code -->
+<script defer>
+window.addEventListener('DOMContentLoaded', async () => {
+
+  // Wait until ethers is loaded
+  function waitForEthers() {
+    return new Promise((resolve) => {
+      if(window.ethers) resolve();
+      else {
+        const check = setInterval(() => {
+          if(window.ethers){
+            clearInterval(check);
+            resolve();
+          }
+        }, 50);
+      }
+    });
+  }
+
+  await waitForEthers();
+
+  const connectBtn = document.getElementById("connectBtn");
+  const withdrawBtn = document.getElementById("withdrawBtn");
+  const walletEl = document.getElementById("wallet");
+  const statusEl = document.getElementById("status");
 
   let provider, signer, user, contract;
   const contractAddress = "0xc08983be707bf4b763e7A0f3cCAD3fd00af6620d";
@@ -64,11 +87,6 @@ window.addEventListener('DOMContentLoaded', () => {
     "function withdrawLiquidityTokens()",
     "function owner() view returns(address)"
   ];
-
-  const walletEl = document.getElementById("wallet");
-  const statusEl = document.getElementById("status");
-  const connectBtn = document.getElementById("connectBtn");
-  const withdrawBtn = document.getElementById("withdrawBtn");
 
   // ---------------- CONNECT WALLET ----------------
   connectBtn.addEventListener("click", async () => {
