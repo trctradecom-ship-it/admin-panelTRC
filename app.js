@@ -1,7 +1,7 @@
 let provider, signer, user, contract, token, chart;
 
-const contractAddress = "0xc08983be707bf4b763e7A0f3cCAD3fd00af6620d";
-const tokenAddress = "0xc08983be707bf4b763e7A0f3cCAD3fd00af6620d";
+const contractAddress = "0x27ba5f7B7645B70C5F9F78DB5bc51730e7463C43";
+const tokenAddress = "0x27ba5f7B7645B70C5F9F78DB5bc51730e7463C43";
 
 const abi = [
     "function owner() view returns(address)",
